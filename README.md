@@ -1,4 +1,6 @@
 # AI Chatbot with Machine Learning
+**Maintainer:** Aashay Chahande  
+
 
 ![Python](https://img.shields.io/badge/Python-3.6+-blue.svg)
 ![ML](https://img.shields.io/badge/Machine-Learning-orange.svg)

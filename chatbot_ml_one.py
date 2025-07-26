@@ -10,7 +10,7 @@ init(autoreset=True)
 
 MEMORY_FILE = "chat_memory.json"
 
-# --- Emotion Detection Keywords ---
+
 EMOTION_KEYWORDS = {
     "happy": ["happy", "great", "awesome", "good", "fantastic", "joy"],
     "sad": ["sad", "bad", "depressed", "down", "unhappy", "miserable"],
@@ -18,7 +18,6 @@ EMOTION_KEYWORDS = {
     "neutral": ["ok", "fine", "nothing", "alright"]
 }
 
-# --- Basic Conversation Patterns ---
 RESPONSES = {
     "greeting": ["Hi!", "Hello!", "Hey there!", "Howdy!"],
     "how_are_you": ["I'm doing well, thanks!", "Feeling good today!", "Alive and kicking! 😄"],
@@ -55,23 +54,23 @@ def detect_emotion(text):
 def get_response(user_input, memory):
     user_input = user_input.lower()
 
-    # Greetings
+  
     if any(greet in user_input for greet in ["hi", "hello", "hey"]):
         return random.choice(RESPONSES["greeting"])
 
-    # How are you?
+ 
     elif "how are you" in user_input:
         return random.choice(RESPONSES["how_are_you"])
 
-    # Goodbye
+
     elif any(goodbye in user_input for goodbye in ["bye", "exit", "quit", "goodbye"]):
         return random.choice(RESPONSES["goodbye"])
 
-    # Thanks
+  
     elif any(thanks in user_input for thanks in ["thank", "thanks", "thx"]):
         return random.choice(RESPONSES["thanks"])
 
-    # Emotional responses
+
     elif detect_emotion(user_input) == "sad":
         return "I'm sorry to hear that. Want to talk about it?"
     elif detect_emotion(user_input) == "angry":
@@ -79,7 +78,7 @@ def get_response(user_input, memory):
     elif detect_emotion(user_input) == "happy":
         return "That's awesome to hear! 😊"
     
-    # Try ML-based response
+
     else:
         return find_similar_response(user_input, memory)
 
@@ -88,21 +87,44 @@ def find_similar_response(user_input, memory):
         return "Interesting... Tell me more!"
 
     cleaned_input = preprocess(user_input)
-    cleaned_questions = [preprocess(entry["user"]) for entry in memory]
-
-    # Add current input to list for vectorization
+   
     all_questions = cleaned_questions + [cleaned_input]
 
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(all_questions)
 
-    # Compare last message with all others
     similarities = cosine_similarity(tfidf_matrix[-1], tfidf_matrix[:-1])
     most_similar_idx = similarities.argmax()
 
-    # If similarity > threshold, use past response
-    if similarities[0][most_similar_idx] > 0.3:  # Lowered threshold for better match
+
+    if similarities[0][most_similar_idx] > 0.3: 
         return memory[most_similar_idx]["bot"]
     else:
         return "That's new to me! Tell me more."
+def chatbot():
+    memory = load_memory()
+    print(Fore.CYAN + "🧠 AI Chatbot (with ML): Hello! I learn from our conversations. Type 'exit' to end.")
+
+    while True:
+        user_input = input(Fore.YELLOW + "You: ")
+
+        if user_input.lower() in ["exit", "quit", "bye"]:
+            save_memory(memory)
+            print(Fore.MAGENTA + "🧠 AI Chatbot: Goodbye!")
+            break
+
+        response = get_response(user_input, memory)
+        emotion = detect_emotion(user_input)
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        memory.append({
+            "timestamp": timestamp,
+            "user": user_input,
+            "emotion": emotion,
+            "bot": response
+        })
+
+        print(Fore.GREEN + f"🧠 AI Chatbot: {response}")
+
+if __name__ == "__main__":
 
